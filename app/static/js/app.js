@@ -24,7 +24,8 @@ class RingCustomizer {
             height: 600,
             backgroundColor: '#ffffff',
             selection: true,
-            preserveObjectStacking: true
+            preserveObjectStacking: true,
+            uniformScaling: false
         });
 
         // Canvas event listeners
@@ -138,49 +139,140 @@ class RingCustomizer {
 
 
     addElement(src, name, type) {
-        if (src.includes('data:image/svg+xml')) {
-            // Handle SVG fallback
-            const svgData = atob(src.split(',')[1]);
-            fabric.loadSVGFromString(svgData, (objects, options) => {
-                const element = fabric.util.groupSVGElements(objects, options);
-                element.set({
-                    left: this.canvas.width / 2,
-                    top: this.canvas.height / 2,
+        // Create gemstone shapes directly with Fabric.js based on type
+        let element;
+        
+        switch(src) {
+            case 'diamond':
+                const diamondPoints = [
+                    {x: 30, y: 5}, {x: 45, y: 20}, {x: 30, y: 55}, {x: 15, y: 20}
+                ];
+                element = new fabric.Polygon(diamondPoints, {
+                    fill: '#DDDDDD',
+                    stroke: '#999999',
+                    strokeWidth: 2,
+                    lockScalingX: true,
+                    lockScalingY: true
+                });
+                break;
+                
+            case 'ruby':
+            case 'amethyst':
+                element = new fabric.Circle({
+                    radius: 20,
+                    fill: src === 'ruby' ? '#DC143C' : '#9C27B0',
+                    stroke: src === 'ruby' ? '#B91C2C' : '#6A1B9A',
+                    strokeWidth: 2,
+                    lockScalingX: true,
+                    lockScalingY: true
+                });
+                break;
+                
+            case 'emerald':
+                element = new fabric.Rect({
+                    width: 30,
+                    height: 30,
+                    fill: '#50CD1E',
+                    stroke: '#2E7D32',
+                    strokeWidth: 2,
                     originX: 'center',
                     originY: 'center',
-                    selectable: true,
-                    name: name,
-                    type: type
+                    lockScalingX: true,
+                    lockScalingY: true
                 });
+                break;
                 
-                this.canvas.add(element);
-                this.canvas.setActiveObject(element);
-                this.canvas.renderAll();
-                this.saveState();
-            });
-        } else {
-            // Handle image
-            fabric.Image.fromURL(src, (img) => {
-                img.set({
-                    left: this.canvas.width / 2,
-                    top: this.canvas.height / 2,
-                    originX: 'center',
-                    originY: 'center',
-                    selectable: true,
-                    name: name,
-                    type: type
+            case 'sapphire':
+                element = new fabric.Ellipse({
+                    rx: 20,
+                    ry: 15,
+                    fill: '#007FFF',
+                    stroke: '#005FBF',
+                    strokeWidth: 2,
+                    lockScalingX: true,
+                    lockScalingY: true
                 });
+                break;
                 
-                // Scale to appropriate size for gemstones
-                const maxSize = type === 'gemstone' ? 60 : 80;
-                const scale = Math.min(maxSize / img.width, maxSize / img.height);
-                img.scale(scale);
+            case 'topaz':
+                const topazPoints = [
+                    {x: 30, y: 8}, {x: 46, y: 18}, {x: 46, y: 42}, 
+                    {x: 30, y: 52}, {x: 14, y: 42}, {x: 14, y: 18}
+                ];
+                element = new fabric.Polygon(topazPoints, {
+                    fill: '#FFA500',
+                    stroke: '#E69500',
+                    strokeWidth: 2,
+                    lockScalingX: true,
+                    lockScalingY: true
+                });
+                break;
                 
-                this.canvas.add(img);
-                this.canvas.setActiveObject(img);
-                this.canvas.renderAll();
-                this.saveState();
+            default:
+                // Handle custom images
+                if (src.includes('data:image/svg+xml')) {
+                    // Handle SVG fallback
+                    const svgData = atob(src.split(',')[1]);
+                    fabric.loadSVGFromString(svgData, (objects, options) => {
+                        const element = fabric.util.groupSVGElements(objects, options);
+                        element.set({
+                            left: this.canvas.width / 2,
+                            top: this.canvas.height / 2,
+                            originX: 'center',
+                            originY: 'center',
+                            selectable: true,
+                            name: name,
+                            type: type
+                        });
+                        
+                        this.canvas.add(element);
+                        this.canvas.setActiveObject(element);
+                        this.canvas.renderAll();
+                        this.saveState();
+                    });
+                    return;
+                } else {
+                    // Handle image
+                    fabric.Image.fromURL(src, (img) => {
+                        img.set({
+                            left: this.canvas.width / 2,
+                            top: this.canvas.height / 2,
+                            originX: 'center',
+                            originY: 'center',
+                            selectable: true,
+                            name: name,
+                            type: type
+                        });
+                        
+                        // Scale to appropriate size for gemstones
+                        const maxSize = type === 'gemstone' ? 60 : 80;
+                        const scale = Math.min(maxSize / img.width, maxSize / img.height);
+                        img.scale(scale);
+                        
+                        this.canvas.add(img);
+                        this.canvas.setActiveObject(img);
+                        this.canvas.renderAll();
+                        this.saveState();
+                    });
+                    return;
+                }
+        }
+        
+        if (element) {
+            element.set({
+                left: this.canvas.width / 2,
+                top: this.canvas.height / 2,
+                originX: 'center',
+                originY: 'center',
+                selectable: true,
+                name: name,
+                type: type
             });
+            
+            this.canvas.add(element);
+            this.canvas.setActiveObject(element);
+            this.canvas.renderAll();
+            this.saveState();
         }
     }
 
