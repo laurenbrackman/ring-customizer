@@ -381,14 +381,6 @@ class RingCustomizer {
         
         propertiesDiv.innerHTML = `
             <div class="property-group">
-                <label class="property-label">Name:</label>
-                <input type="text" class="property-control" id="prop-name" value="${obj.name || ''}" maxlength="50">
-            </div>
-            <div class="property-group">
-                <label class="property-label">Opacity:</label>
-                <input type="range" class="property-control" id="prop-opacity" min="0" max="1" step="0.1" value="${obj.opacity || 1}">
-            </div>
-            <div class="property-group">
                 <label class="property-label">Rotation:</label>
                 <input type="range" class="property-control" id="prop-rotation" min="0" max="360" value="${obj.angle || 0}">
             </div>
@@ -399,23 +391,7 @@ class RingCustomizer {
     }
 
     setupPropertyHandlers() {
-        const nameInput = document.getElementById('prop-name');
-        const opacityInput = document.getElementById('prop-opacity');
         const rotationInput = document.getElementById('prop-rotation');
-
-        if (nameInput) {
-            nameInput.addEventListener('input', () => {
-                this.selectedObject.set('name', nameInput.value);
-                this.updateLayerPanel();
-            });
-        }
-
-        if (opacityInput) {
-            opacityInput.addEventListener('input', () => {
-                this.selectedObject.set('opacity', parseFloat(opacityInput.value));
-                this.canvas.renderAll();
-            });
-        }
 
         if (rotationInput) {
             rotationInput.addEventListener('input', () => {
