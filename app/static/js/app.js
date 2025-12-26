@@ -88,9 +88,6 @@ class RingCustomizer {
             this.handleFileUpload(e);
         });
 
-        // Text modal
-        this.setupTextModal();
-
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
             if (e.ctrlKey || e.metaKey) {
@@ -124,14 +121,10 @@ class RingCustomizer {
         const gemstones = document.querySelectorAll('#gemstones .element-item');
         gemstones.forEach(item => {
             item.addEventListener('click', () => {
-                if (item.dataset.text) {
-                    this.showTextModal();
-                } else {
-                    const src = item.dataset.src;
-                    const name = item.querySelector('span').textContent;
-                    const type = item.dataset.type;
-                    this.addElement(src, name, type);
-                }
+                const src = item.dataset.src;
+                const name = item.querySelector('span').textContent;
+                const type = item.dataset.type;
+                this.addElement(src, name, type);
             });
         });
     }
@@ -276,74 +269,11 @@ class RingCustomizer {
         }
     }
 
-    setupTextModal() {
-        const modal = document.getElementById('text-modal');
-        const closeBtn = modal.querySelector('.close');
-        const addTextBtn = document.getElementById('add-text-btn');
-        const textInput = document.getElementById('text-input');
-        const fontSizeRange = document.getElementById('font-size');
-        const fontSizeValue = document.getElementById('font-size-value');
 
-        // Font size display update
-        fontSizeRange.addEventListener('input', () => {
-            fontSizeValue.textContent = fontSizeRange.value + 'px';
-        });
 
-        // Close modal
-        closeBtn.addEventListener('click', () => {
-            modal.style.display = 'none';
-        });
 
-        // Add text
-        addTextBtn.addEventListener('click', () => {
-            this.addText();
-            modal.style.display = 'none';
-        });
 
-        // Enter key to add text
-        textInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                this.addText();
-                modal.style.display = 'none';
-            }
-        });
-    }
 
-    showTextModal() {
-        const modal = document.getElementById('text-modal');
-        const textInput = document.getElementById('text-input');
-        
-        modal.style.display = 'block';
-        textInput.focus();
-        textInput.value = '';
-    }
-
-    addText() {
-        const textInput = document.getElementById('text-input');
-        const fontSize = document.getElementById('font-size').value;
-        const fontFamily = document.getElementById('font-family').value;
-        const textColor = document.getElementById('text-color').value;
-        
-        if (!textInput.value.trim()) return;
-
-        const text = new fabric.Text(textInput.value, {
-            left: this.canvas.width / 2,
-            top: this.canvas.height / 2,
-            originX: 'center',
-            originY: 'center',
-            fontFamily: fontFamily,
-            fontSize: parseInt(fontSize),
-            fill: textColor,
-            selectable: true,
-            name: `Text: ${textInput.value}`,
-            type: 'text'
-        });
-
-        this.canvas.add(text);
-        this.canvas.setActiveObject(text);
-        this.canvas.renderAll();
-        this.saveState();
-    }
 
     handleFileUpload(event) {
         const file = event.target.files[0];
@@ -409,7 +339,6 @@ class RingCustomizer {
             // Set thumbnail icon based on type
             const iconMap = {
                 'gemstone': '💎',
-                'text': '🔤',
                 'custom': '🖼️'
             };
             thumbnail.textContent = iconMap[obj.type] || '📷';
@@ -465,16 +394,6 @@ class RingCustomizer {
             </div>
         `;
 
-        // Add color control for text
-        if (obj.type === 'text') {
-            propertiesDiv.innerHTML += `
-                <div class="property-group">
-                    <label class="property-label">Color:</label>
-                    <input type="color" class="property-control" id="prop-color" value="${obj.fill || '#000000'}">
-                </div>
-            `;
-        }
-
         // Set up property change handlers
         this.setupPropertyHandlers();
     }
@@ -483,7 +402,6 @@ class RingCustomizer {
         const nameInput = document.getElementById('prop-name');
         const opacityInput = document.getElementById('prop-opacity');
         const rotationInput = document.getElementById('prop-rotation');
-        const colorInput = document.getElementById('prop-color');
 
         if (nameInput) {
             nameInput.addEventListener('input', () => {
@@ -502,13 +420,6 @@ class RingCustomizer {
         if (rotationInput) {
             rotationInput.addEventListener('input', () => {
                 this.selectedObject.set('angle', parseInt(rotationInput.value));
-                this.canvas.renderAll();
-            });
-        }
-
-        if (colorInput && this.selectedObject.type === 'text') {
-            colorInput.addEventListener('input', () => {
-                this.selectedObject.set('fill', colorInput.value);
                 this.canvas.renderAll();
             });
         }

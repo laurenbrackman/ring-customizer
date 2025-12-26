@@ -68,12 +68,6 @@
                             </svg>
                             <span>Amethyst</span>
                         </div>
-                        <div class="element-item" data-type="text" data-text="true">
-                            <div class="text-element-icon">
-                                <i class="fas fa-font"></i>
-                            </div>
-                            <span>Text</span>
-                        </div>
                     </div>
                 </div>
 
@@ -124,35 +118,6 @@
                 </div>
             </aside>
         </div>
-
-        <!-- Modal for text input -->
-        <div id="text-modal" class="modal">
-            <div class="modal-content">
-                <span class="close">&times;</span>
-                <h3>Add Text</h3>
-                <input type="text" id="text-input" placeholder="Enter text..." maxlength="50">
-                <div class="text-options">
-                    <label>Font Size:</label>
-                    <input type="range" id="font-size" min="12" max="72" value="24">
-                    <span id="font-size-value">24px</span>
-                </div>
-                <div class="text-options">
-                    <label>Font Family:</label>
-                    <select id="font-family">
-                        <option value="Arial">Arial</option>
-                        <option value="Georgia">Georgia</option>
-                        <option value="Times New Roman">Times New Roman</option>
-                        <option value="Courier New">Courier New</option>
-                    </select>
-                </div>
-                <div class="text-options">
-                    <label>Color:</label>
-                    <input type="color" id="text-color" value="#000000">
-                </div>
-                <button id="add-text-btn" class="btn btn-primary">Add Text</button>
-            </div>
-        </div>
-    </div>
 
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
