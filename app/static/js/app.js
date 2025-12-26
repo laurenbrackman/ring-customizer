@@ -126,7 +126,8 @@ class RingCustomizer {
                 const src = item.dataset.src;
                 const name = item.querySelector('span').textContent;
                 const type = item.dataset.type;
-                this.addElement(src, name, type);
+                const gemstoneType = item.dataset.gemstone;
+                this.addElement(src, name, type, gemstoneType);
             });
         });
     }
@@ -184,266 +185,117 @@ class RingCustomizer {
         const gemstone = this.selectedObject;
         const bezelColor = this.selectedBezelMetal === 'gold' ? '#FFD700' : '#C0C0C0';
         
-        // Calculate bezel size based on gemstone
-        let bezelRadius;
+        // Create a bezel that traces the gemstone shape using a slightly larger solid-colored version
+        const originalSrc = gemstone.getSrc ? gemstone.getSrc() : gemstone._originalElement?.src;
         
-        // Get the bounding box of the gemstone to calculate appropriate bezel size
-        const gemstoneType = gemstone.gemstoneType;
-        
-        switch(gemstoneType) {
-            case 'diamond':
-            case 'topaz':
-                bezelRadius = 30; // Polygon shapes
-                break;
-            case 'ruby':
-            case 'amethyst':
-                bezelRadius = gemstone.radius + 5;
-                break;
-            case 'emerald':
-                bezelRadius = 25; // Rectangle shape
-                break;
-            case 'sapphire':
-                bezelRadius = Math.max(gemstone.rx, gemstone.ry) + 5;
-                break;
-            default:
-                bezelRadius = 25; // Default size
-        }
-
-        let bezel;
-        
-        // Create bezel based on style
-        switch(this.selectedBezelStyle) {
-            case 'plain':
-                bezel = new fabric.Circle({
-                    radius: bezelRadius,
-                    fill: 'transparent',
-                    stroke: bezelColor,
-                    strokeWidth: 4,
-                    left: gemstone.left,
-                    top: gemstone.top,
-                    originX: 'center',
-                    originY: 'center',
-                    selectable: true,
-                    name: `${this.selectedBezelMetal} Plain Bezel`,
-                    type: 'bezel',
-                    lockScalingX: true,
-                    lockScalingY: true
-                });
-                break;
+        if (originalSrc) {
+            fabric.Image.fromURL(originalSrc, (bezelImg) => {
+                // Create bezel effect with solid color
+                const bezelScale = gemstone.scaleX * 1.15; // 15% larger than gemstone
                 
-            case 'serrated':
-                bezel = new fabric.Circle({
-                    radius: bezelRadius,
-                    fill: 'transparent',
-                    stroke: bezelColor,
-                    strokeWidth: 4,
-                    strokeDashArray: [3, 2],
+                bezelImg.set({
                     left: gemstone.left,
                     top: gemstone.top,
                     originX: 'center',
                     originY: 'center',
+                    scaleX: bezelScale,
+                    scaleY: bezelScale,
                     selectable: true,
-                    name: `${this.selectedBezelMetal} Serrated Bezel`,
+                    name: `${this.selectedBezelMetal} ${this.selectedBezelStyle} Bezel`,
                     type: 'bezel',
                     lockScalingX: true,
-                    lockScalingY: true
+                    lockScalingY: true,
+                    angle: gemstone.angle || 0
                 });
-                break;
-                
-            case 'scalloped':
-                bezel = new fabric.Circle({
-                    radius: bezelRadius,
-                    fill: 'transparent',
-                    stroke: bezelColor,
-                    strokeWidth: 6,
-                    strokeDashArray: [4, 3],
-                    left: gemstone.left,
-                    top: gemstone.top,
-                    originX: 'center',
-                    originY: 'center',
-                    selectable: true,
-                    name: `${this.selectedBezelMetal} Scalloped Bezel`,
-                    type: 'bezel',
-                    lockScalingX: true,
-                    lockScalingY: true
-                });
-                break;
-        }
 
-        if (bezel) {
-            // Add bezel behind the gemstone
-            const gemstoneIndex = this.canvas.getObjects().indexOf(gemstone);
-            this.canvas.insertAt(bezel, gemstoneIndex);
-            
-            this.canvas.setActiveObject(bezel);
-            this.canvas.renderAll();
-            this.saveState();
-            
-            // Reset bezel selections
-            document.querySelectorAll('.bezel-option').forEach(o => o.classList.remove('selected'));
-            document.querySelectorAll('.bezel-metal').forEach(m => m.classList.remove('selected'));
-            this.selectedBezelStyle = null;
-            this.selectedBezelMetal = null;
-            this.updateBezelButton();
-            
-            // Update the properties panel to refresh the bezel controls
-            this.updatePropertiesPanel();
+                // Apply solid color bezel styling
+                this.applyBezelStyling(bezelImg, this.selectedBezelStyle, bezelColor);
+                
+                // Add bezel behind the gemstone
+                const gemstoneIndex = this.canvas.getObjects().indexOf(gemstone);
+                this.canvas.insertAt(bezelImg, gemstoneIndex);
+                
+                this.canvas.setActiveObject(bezelImg);
+                this.canvas.renderAll();
+                this.saveState();
+                
+                // Reset bezel selections
+                document.querySelectorAll('.bezel-option').forEach(o => o.classList.remove('selected'));
+                document.querySelectorAll('.bezel-metal').forEach(m => m.classList.remove('selected'));
+                this.selectedBezelStyle = null;
+                this.selectedBezelMetal = null;
+                this.updateBezelButton();
+                
+                // Update the properties panel to refresh the bezel controls
+                this.updatePropertiesPanel();
+            });
         }
     }
 
-    addElement(src, name, type) {
-        // Create gemstone shapes directly with Fabric.js based on type
-        let element;
+    applyBezelStyling(bezelImg, style, color) {
+        // Apply filters to create a solid colored bezel
+        bezelImg.filters = [];
         
-        switch(src) {
-            case 'diamond':
-                const diamondPoints = [
-                    {x: 30, y: 5}, {x: 45, y: 20}, {x: 30, y: 55}, {x: 15, y: 20}
-                ];
-                element = new fabric.Polygon(diamondPoints, {
-                    fill: '#DDDDDD',
-                    stroke: '#999999',
-                    strokeWidth: 2,
-                    lockScalingX: true,
-                    lockScalingY: true,
-                    type: 'gemstone',
-                    gemstoneType: 'diamond'
-                });
+        // Create solid color effect by removing all original color information
+        // and replacing with the bezel color
+        const solidColorMatrix = color === '#FFD700' ? 
+            [0, 0, 0, 0, 1.0,     // Red channel -> Gold
+             0, 0, 0, 0, 0.843,   // Green channel -> Gold  
+             0, 0, 0, 0, 0,       // Blue channel -> Gold
+             0, 0, 0, 1, 0] :     // Keep alpha
+            [0, 0, 0, 0, 0.753,   // Red channel -> Silver
+             0, 0, 0, 0, 0.753,   // Green channel -> Silver
+             0, 0, 0, 0, 0.753,   // Blue channel -> Silver
+             0, 0, 0, 1, 0];      // Keep alpha
+             
+        bezelImg.filters.push(new fabric.Image.filters.ColorMatrix({ matrix: solidColorMatrix }));
+        
+        // Add slight blur for softer bezel edge based on style
+        switch(style) {
+            case 'plain':
+                bezelImg.filters.push(new fabric.Image.filters.Blur({ blur: 0.05 }));
                 break;
-                
-            case 'ruby':
-            case 'amethyst':
-                element = new fabric.Circle({
-                    radius: 20,
-                    fill: src === 'ruby' ? '#DC143C' : '#9C27B0',
-                    stroke: src === 'ruby' ? '#B91C2C' : '#6A1B9A',
-                    strokeWidth: 2,
-                    lockScalingX: true,
-                    lockScalingY: true,
-                    type: 'gemstone',
-                    gemstoneType: src
-                });
+            case 'serrated':
+                bezelImg.filters.push(new fabric.Image.filters.Blur({ blur: 0.1 }));
                 break;
-                
-            case 'emerald':
-                element = new fabric.Rect({
-                    width: 30,
-                    height: 30,
-                    fill: '#50CD1E',
-                    stroke: '#2E7D32',
-                    strokeWidth: 2,
-                    originX: 'center',
-                    originY: 'center',
-                    lockScalingX: true,
-                    lockScalingY: true,
-                    type: 'gemstone',
-                    gemstoneType: 'emerald'
-                });
+            case 'scalloped':
+                bezelImg.filters.push(new fabric.Image.filters.Blur({ blur: 0.08 }));
                 break;
-                
-            case 'sapphire':
-                element = new fabric.Ellipse({
-                    rx: 20,
-                    ry: 15,
-                    fill: '#007FFF',
-                    stroke: '#005FBF',
-                    strokeWidth: 2,
-                    lockScalingX: true,
-                    lockScalingY: true,
-                    type: 'gemstone',
-                    gemstoneType: 'sapphire'
-                });
-                break;
-                
-            case 'topaz':
-                const topazPoints = [
-                    {x: 30, y: 8}, {x: 46, y: 18}, {x: 46, y: 42}, 
-                    {x: 30, y: 52}, {x: 14, y: 42}, {x: 14, y: 18}
-                ];
-                element = new fabric.Polygon(topazPoints, {
-                    fill: '#FFA500',
-                    stroke: '#E69500',
-                    strokeWidth: 2,
-                    lockScalingX: true,
-                    lockScalingY: true,
-                    type: 'gemstone',
-                    gemstoneType: 'topaz'
-                });
-                break;
-                
-            default:
-                // Handle custom images
-                if (src.includes('data:image/svg+xml')) {
-                    // Handle SVG fallback
-                    const svgData = atob(src.split(',')[1]);
-                    fabric.loadSVGFromString(svgData, (objects, options) => {
-                        const element = fabric.util.groupSVGElements(objects, options);
-                        element.set({
-                            left: this.canvas.width / 2,
-                            top: this.canvas.height / 2,
-                            originX: 'center',
-                            originY: 'center',
-                            selectable: true,
-                            name: name,
-                            type: type
-                        });
-                        
-                        this.canvas.add(element);
-                        this.canvas.setActiveObject(element);
-                        this.canvas.renderAll();
-                        this.saveState();
-                    });
-                    return;
-                } else {
-                    // Handle image
-                    fabric.Image.fromURL(src, (img) => {
-                        img.set({
-                            left: this.canvas.width / 2,
-                            top: this.canvas.height / 2,
-                            originX: 'center',
-                            originY: 'center',
-                            selectable: true,
-                            name: name,
-                            type: type
-                        });
-                        
-                        // Scale to appropriate size for gemstones
-                        const maxSize = type === 'gemstone' ? 60 : 80;
-                        const scale = Math.min(maxSize / img.width, maxSize / img.height);
-                        img.scale(scale);
-                        
-                        this.canvas.add(img);
-                        this.canvas.setActiveObject(img);
-                        this.canvas.renderAll();
-                        this.saveState();
-                    });
-                    return;
-                }
         }
         
-        if (element) {
-            element.set({
+        bezelImg.applyFilters();
+    }
+
+    addElement(src, name, type, gemstoneType = null) {
+        // Load actual gemstone images
+        fabric.Image.fromURL(src, (img) => {
+            img.set({
                 left: this.canvas.width / 2,
                 top: this.canvas.height / 2,
                 originX: 'center',
                 originY: 'center',
                 selectable: true,
-                name: name
-                // Don't override the type - keep the 'gemstone' type we set earlier
+                name: name,
+                type: 'gemstone',
+                gemstoneType: gemstoneType || name.toLowerCase(),
+                lockScalingX: true,
+                lockScalingY: true
             });
             
-            this.canvas.add(element);
-            this.canvas.setActiveObject(element);
+            // Scale gemstones to consistent size
+            const maxSize = 80;
+            const scale = Math.min(maxSize / img.width, maxSize / img.height);
+            img.scale(scale);
+            
+            this.canvas.add(img);
+            this.canvas.setActiveObject(img);
             this.canvas.renderAll();
             this.saveState();
-        }
+        }, {
+            // Handle image load errors
+            crossOrigin: 'anonymous'
+        });
     }
-
-
-
-
-
-
 
     handleFileUpload(event) {
         const file = event.target.files[0];
