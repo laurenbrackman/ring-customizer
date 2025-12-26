@@ -35,36 +35,11 @@ class RingCustomizer {
         this.canvas.on('object:added', () => this.updateLayerPanel());
         this.canvas.on('object:removed', () => this.updateLayerPanel());
 
-        // Add default ring base
-        this.addDefaultRing();
+        // Initialize with blank canvas - no default ring
+        this.saveState();
     }
 
-    addDefaultRing() {
-        // Create a default ring shape as SVG
-        const ringSVG = `
-            <svg width="200" height="200" viewBox="0 0 200 200">
-                <circle cx="100" cy="100" r="80" fill="none" stroke="#FFD700" stroke-width="15"/>
-                <circle cx="100" cy="100" r="65" fill="none" stroke="#FFD700" stroke-width="5" opacity="0.5"/>
-            </svg>
-        `;
-        
-        fabric.loadSVGFromString(ringSVG, (objects, options) => {
-            const ring = fabric.util.groupSVGElements(objects, options);
-            ring.set({
-                left: this.canvas.width / 2,
-                top: this.canvas.height / 2,
-                originX: 'center',
-                originY: 'center',
-                selectable: true,
-                name: 'Gold Ring Base',
-                type: 'ring'
-            });
-            
-            this.canvas.add(ring);
-            this.canvas.renderAll();
-            this.saveState();
-        });
-    }
+
 
     setupEventListeners() {
         // Save design
@@ -144,19 +119,9 @@ class RingCustomizer {
     }
 
     setupToolbox() {
-        // Ring bases
-        const ringBases = document.querySelectorAll('#ring-bases .element-item');
-        ringBases.forEach(item => {
-            item.addEventListener('click', () => {
-                const src = item.dataset.src;
-                const name = item.querySelector('span').textContent;
-                this.addRingBase(src, name);
-            });
-        });
-
-        // Design elements
-        const designElements = document.querySelectorAll('#design-elements .element-item');
-        designElements.forEach(item => {
+        // Gemstone elements
+        const gemstones = document.querySelectorAll('#gemstones .element-item');
+        gemstones.forEach(item => {
             item.addEventListener('click', () => {
                 if (item.dataset.text) {
                     this.showTextModal();
@@ -170,59 +135,7 @@ class RingCustomizer {
         });
     }
 
-    addRingBase(src, name) {
-        // Remove existing ring bases
-        const objects = this.canvas.getObjects();
-        objects.forEach(obj => {
-            if (obj.type === 'ring' || obj.name?.includes('Ring Base')) {
-                this.canvas.remove(obj);
-            }
-        });
 
-        // Add new ring base
-        if (src.includes('data:image/svg+xml')) {
-            // Handle SVG fallback
-            const svgData = atob(src.split(',')[1]);
-            fabric.loadSVGFromString(svgData, (objects, options) => {
-                const ring = fabric.util.groupSVGElements(objects, options);
-                ring.set({
-                    left: this.canvas.width / 2,
-                    top: this.canvas.height / 2,
-                    originX: 'center',
-                    originY: 'center',
-                    selectable: true,
-                    name: name,
-                    type: 'ring'
-                });
-                
-                this.canvas.add(ring);
-                this.canvas.renderAll();
-                this.saveState();
-            });
-        } else {
-            // Handle image
-            fabric.Image.fromURL(src, (img) => {
-                img.set({
-                    left: this.canvas.width / 2,
-                    top: this.canvas.height / 2,
-                    originX: 'center',
-                    originY: 'center',
-                    selectable: true,
-                    name: name,
-                    type: 'ring'
-                });
-                
-                // Scale to fit
-                const maxSize = 200;
-                const scale = Math.min(maxSize / img.width, maxSize / img.height);
-                img.scale(scale);
-                
-                this.canvas.add(img);
-                this.canvas.renderAll();
-                this.saveState();
-            });
-        }
-    }
 
     addElement(src, name, type) {
         if (src.includes('data:image/svg+xml')) {
@@ -258,8 +171,8 @@ class RingCustomizer {
                     type: type
                 });
                 
-                // Scale to appropriate size
-                const maxSize = type === 'stone' ? 80 : 120;
+                // Scale to appropriate size for gemstones
+                const maxSize = type === 'gemstone' ? 60 : 80;
                 const scale = Math.min(maxSize / img.width, maxSize / img.height);
                 img.scale(scale);
                 
@@ -403,8 +316,7 @@ class RingCustomizer {
             
             // Set thumbnail icon based on type
             const iconMap = {
-                'ring': '💍',
-                'stone': '💎',
+                'gemstone': '💎',
                 'text': '🔤',
                 'custom': '🖼️'
             };
