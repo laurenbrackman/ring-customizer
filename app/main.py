@@ -156,4 +156,5 @@ if __name__ == '__main__':
     from dotenv import load_dotenv
     load_dotenv()
     
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    port = int(os.environ.get('FLASK_RUN_PORT', 5001))
+    app.run(debug=True, host='0.0.0.0', port=port)
