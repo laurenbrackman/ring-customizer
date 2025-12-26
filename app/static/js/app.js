@@ -169,6 +169,8 @@ class RingCustomizer {
 
     updateBezelButton() {
         const addBezelBtn = document.getElementById('add-bezel-btn');
+        if (!addBezelBtn) return; // Exit if button doesn't exist
+        
         const hasSelection = this.selectedObject && this.selectedObject.type === 'gemstone';
         const hasBezelConfig = this.selectedBezelStyle && this.selectedBezelMetal;
         
