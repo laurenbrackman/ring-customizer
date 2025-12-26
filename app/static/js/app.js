@@ -285,6 +285,9 @@ class RingCustomizer {
             this.selectedBezelStyle = null;
             this.selectedBezelMetal = null;
             this.updateBezelButton();
+            
+            // Update the properties panel to refresh the bezel controls
+            this.updatePropertiesPanel();
         }
     }
 
