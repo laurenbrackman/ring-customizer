@@ -435,6 +435,82 @@ body {
     }
 }
 
+/* Bezel Controls */
+.bezel-controls {
+    padding: 0.5rem 0;
+}
+
+.bezel-style-section,
+.bezel-metal-section {
+    margin-bottom: 1.5rem;
+}
+
+.bezel-style-section h4,
+.bezel-metal-section h4 {
+    font-size: 0.85rem;
+    color: #555;
+    margin-bottom: 0.75rem;
+    font-weight: 500;
+}
+
+.bezel-style-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+}
+
+.bezel-metal-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+}
+
+.bezel-option,
+.bezel-metal {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.5rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: #f9f9f9;
+}
+
+.bezel-option:hover,
+.bezel-metal:hover {
+    border-color: #3498db;
+    background: #ecf0f1;
+}
+
+.bezel-option.selected,
+.bezel-metal.selected {
+    border-color: #3498db;
+    background: #e3f2fd;
+}
+
+.bezel-option span,
+.bezel-metal span {
+    font-size: 0.7rem;
+    text-align: center;
+    color: #555;
+    margin-top: 0.25rem;
+}
+
+.metal-swatch {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid #ccc;
+    margin-bottom: 0.25rem;
+}
+
+#add-bezel-btn {
+    width: 100%;
+    margin-top: 0.5rem;
+}
+
 @media (max-width: 768px) {
     .main-content {
         flex-direction: column;
