@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ring Customizer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-gem"></i> Ring Customizer</h1>
+                <div class="header-actions">
+                    <button id="save-design" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save
+                    </button>
+                    <button id="export-design" class="btn btn-success">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Toolbox -->
+            <aside class="toolbox">
+                <div class="toolbox-section">
+                    <h3><i class="fas fa-image"></i> Ring Bases</h3>
+                    <div class="element-grid" id="ring-bases">
+                        <div class="element-item" data-type="ring" data-src="/static/images/rings/gold-band.png">
+                            <img src="/static/images/rings/gold-band.png" alt="Gold Band" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iMzUiIHN0cm9rZT0iI0ZGRDcwMCIgc3Ryb2tlLXdpZHRoPSIxMCIgZmlsbD0ibm9uZSIvPgo8L3N2Zz4K'">
+                            <span>Gold Band</span>
+                        </div>
+                        <div class="element-item" data-type="ring" data-src="/static/images/rings/silver-band.png">
+                            <img src="/static/images/rings/silver-band.png" alt="Silver Band" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iMzUiIHN0cm9rZT0iI0M0QzRDNCIgc3Ryb2tlLXdpZHRoPSIxMCIgZmlsbD0ibm9uZSIvPgo8L3N2Zz4K'">
+                            <span>Silver Band</span>
+                        </div>
+                        <div class="element-item" data-type="ring" data-src="/static/images/rings/rose-gold-band.png">
+                            <img src="/static/images/rings/rose-gold-band.png" alt="Rose Gold Band" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iMzUiIHN0cm9rZT0iI0U5MVU5MSIgc3Ryb2tlLXdpZHRoPSIxMCIgZmlsbD0ibm9uZSIvPgo8L3N2Zz4K'">
+                            <span>Rose Gold</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="toolbox-section">
+                    <h3><i class="fas fa-shapes"></i> Elements</h3>
+                    <div class="element-grid" id="design-elements">
+                        <div class="element-item" data-type="stone" data-src="/static/images/elements/diamond.png">
+                            <img src="/static/images/elements/diamond.png" alt="Diamond" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBvbHlnb24gcG9pbnRzPSIzMCw1IDQ1LDIwIDMwLDU1IDE1LDIwIiBmaWxsPSIjREREREREIiBzdHJva2U9IiM5OTk5OTkiIHN0cm9rZS13aWR0aD0iMiIvPgo8L3N2Zz4K'">
+                            <span>Diamond</span>
+                        </div>
+                        <div class="element-item" data-type="stone" data-src="/static/images/elements/ruby.png">
+                            <img src="/static/images/elements/ruby.png" alt="Ruby" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMjAiIGZpbGw9IiNEQzE0M0MiIHN0cm9rZT0iI0I5MUMyQyIgc3Ryb2tlLXdpZHRoPSIyIi8+Cjwvc3ZnPgo='">
+                            <span>Ruby</span>
+                        </div>
+                        <div class="element-item" data-type="stone" data-src="/static/images/elements/emerald.png">
+                            <img src="/static/images/elements/emerald.png" alt="Emerald" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3QgeD0iMTUiIHk9IjE1IiB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIGZpbGw9IiM1MENEMUUiIHN0cm9rZT0iIzJFN0QzMiIgc3Ryb2tlLXdpZHRoPSIyIi8+Cjwvc3ZnPgo='">
+                            <span>Emerald</span>
+                        </div>
+                        <div class="element-item" data-type="text" data-text="true">
+                            <div class="text-element-icon">
+                                <i class="fas fa-font"></i>
+                            </div>
+                            <span>Text</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="toolbox-section">
+                    <h3><i class="fas fa-upload"></i> Custom Elements</h3>
+                    <div class="upload-area">
+                        <input type="file" id="custom-upload" accept="image/*" style="display: none;">
+                        <button id="upload-btn" class="btn btn-outline">
+                            <i class="fas fa-plus"></i> Upload Image
+                        </button>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Canvas Area -->
+            <main class="canvas-area">
+                <div class="canvas-container">
+                    <canvas id="ring-canvas" width="800" height="600"></canvas>
+                </div>
+                <div class="canvas-controls">
+                    <button id="zoom-in" class="btn btn-icon"><i class="fas fa-search-plus"></i></button>
+                    <button id="zoom-out" class="btn btn-icon"><i class="fas fa-search-minus"></i></button>
+                    <button id="reset-view" class="btn btn-icon"><i class="fas fa-expand-arrows-alt"></i></button>
+                </div>
+            </main>
+
+            <!-- Layer Panel -->
+            <aside class="layer-panel">
+                <h3><i class="fas fa-layer-group"></i> Layers</h3>
+                <div class="layer-list" id="layer-list">
+                    <!-- Layers will be populated dynamically -->
+                </div>
+                
+                <div class="layer-controls">
+                    <button id="delete-selected" class="btn btn-danger" disabled>
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                    <button id="duplicate-selected" class="btn btn-outline" disabled>
+                        <i class="fas fa-copy"></i> Duplicate
+                    </button>
+                </div>
+
+                <div class="properties-panel">
+                    <h4>Properties</h4>
+                    <div id="element-properties">
+                        <p class="no-selection">Select an element to edit properties</p>
+                    </div>
+                </div>
+            </aside>
+        </div>
+
+        <!-- Modal for text input -->
+        <div id="text-modal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h3>Add Text</h3>
+                <input type="text" id="text-input" placeholder="Enter text..." maxlength="50">
+                <div class="text-options">
+                    <label>Font Size:</label>
+                    <input type="range" id="font-size" min="12" max="72" value="24">
+                    <span id="font-size-value">24px</span>
+                </div>
+                <div class="text-options">
+                    <label>Font Family:</label>
+                    <select id="font-family">
+                        <option value="Arial">Arial</option>
+                        <option value="Georgia">Georgia</option>
+                        <option value="Times New Roman">Times New Roman</option>
+                        <option value="Courier New">Courier New</option>
+                    </select>
+                </div>
+                <div class="text-options">
+                    <label>Color:</label>
+                    <input type="color" id="text-color" value="#000000">
+                </div>
+                <button id="add-text-btn" class="btn btn-primary">Add Text</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
