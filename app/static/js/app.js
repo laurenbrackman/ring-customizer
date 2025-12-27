@@ -178,44 +178,48 @@ class RingCustomizer {
         addBezelBtn.disabled = !hasSelection || !hasBezelConfig;
     }
 
-    addBezelToSelected() {
-        if (!this.selectedObject || this.selectedObject.type !== 'gemstone') return;
-        if (!this.selectedBezelStyle || !this.selectedBezelMetal) return;
-
-        const gemstone = this.selectedObject;
-        const bezelColor = this.selectedBezelMetal === 'gold' ? '#FFD700' : '#C0C0C0';
+    async addBezelToSelected() {
+        if (!this.selectedObject || this.selectedObject.type !== 'gemstone') {
+            alert('Please select a gemstone first');
+            return;
+        }
         
-        // Create a bezel that traces the gemstone shape using a slightly larger solid-colored version
-        const originalSrc = gemstone.getSrc ? gemstone.getSrc() : gemstone._originalElement?.src;
+        if (!this.selectedBezelStyle || !this.selectedBezelMetal) {
+            alert('Please select both bezel style and metal');
+            return;
+        }
         
-        if (originalSrc) {
-            fabric.Image.fromURL(originalSrc, (bezelImg) => {
-                // Create bezel effect with solid color
-                const bezelScale = gemstone.scaleX * 1.15; // 15% larger than gemstone
+        let originalText = 'Add Bezel';
+        
+        try {
+            // Show loading state
+            const addBezelBtn = document.getElementById('add-bezel-btn');
+            originalText = addBezelBtn?.textContent || 'Add Bezel';
+            if (addBezelBtn) {
+                addBezelBtn.textContent = 'Creating...';
+                addBezelBtn.disabled = true;
+            }
+            
+            // Create bezel using simple shape duplication with color overlay
+            const bezel = await this.createSimpleBezel(
+                this.selectedObject, 
+                this.selectedBezelStyle, 
+                this.selectedBezelMetal
+            );
+            
+            if (bezel) {
+                // Remove any existing bezels for this gemstone
+                const gemstoneId = this.selectedObject.id || this.generateId();
+                if (!this.selectedObject.id) {
+                    this.selectedObject.id = gemstoneId;
+                }
                 
-                bezelImg.set({
-                    left: gemstone.left,
-                    top: gemstone.top,
-                    originX: 'center',
-                    originY: 'center',
-                    scaleX: bezelScale,
-                    scaleY: bezelScale,
-                    selectable: true,
-                    name: `${this.selectedBezelMetal} ${this.selectedBezelStyle} Bezel`,
-                    type: 'bezel',
-                    lockScalingX: true,
-                    lockScalingY: true,
-                    angle: gemstone.angle || 0
-                });
-
-                // Apply solid color bezel styling
-                this.applyBezelStyling(bezelImg, this.selectedBezelStyle, bezelColor);
+                this.removeExistingBezels(gemstoneId);
                 
                 // Add bezel behind the gemstone
-                const gemstoneIndex = this.canvas.getObjects().indexOf(gemstone);
-                this.canvas.insertAt(bezelImg, gemstoneIndex);
+                this.canvas.add(bezel);
+                this.canvas.sendToBack(bezel);
                 
-                this.canvas.setActiveObject(bezelImg);
                 this.canvas.renderAll();
                 this.saveState();
                 
@@ -226,44 +230,125 @@ class RingCustomizer {
                 this.selectedBezelMetal = null;
                 this.updateBezelButton();
                 
-                // Update the properties panel to refresh the bezel controls
+                // Update the properties panel
                 this.updatePropertiesPanel();
-            });
+            }
+            
+        } catch (error) {
+            console.error('Error adding bezel:', error);
+            alert('Failed to create bezel. Please try again.');
+        } finally {
+            // Reset button
+            const addBezelBtn = document.getElementById('add-bezel-btn');
+            if (addBezelBtn) {
+                addBezelBtn.textContent = originalText || 'Add Bezel';
+                addBezelBtn.disabled = false;
+            }
         }
     }
 
-    applyBezelStyling(bezelImg, style, color) {
-        // Apply filters to create a solid colored bezel
+    async createSimpleBezel(gemstone, style, metal) {
+        return new Promise((resolve) => {
+            // Get the image URL from the gemstone object
+            const imageUrl = gemstone.getSrc();
+            
+            // Create a new image for the bezel that's slightly larger
+            fabric.Image.fromURL(imageUrl, (bezelImg) => {
+                // Calculate bezel size (10% larger than gemstone)
+                const bezelScale = (gemstone.scaleX || 1) * 1.1;
+                
+                bezelImg.set({
+                    left: gemstone.left,
+                    top: gemstone.top,
+                    originX: 'center',
+                    originY: 'center',
+                    scaleX: bezelScale,
+                    scaleY: bezelScale,
+                    selectable: true,
+                    type: 'bezel',
+                    gemstoneId: gemstone.id || this.generateId(),
+                    bezelStyle: style,
+                    bezelMetal: metal,
+                    name: `${metal} ${style} Bezel`,
+                    angle: gemstone.angle || 0
+                });
+
+                // Apply solid color filter to create bezel effect
+                this.applyBezelFilter(bezelImg, metal, style);
+                
+                resolve(bezelImg);
+            });
+        });
+    }
+
+    applyBezelFilter(bezelImg, metal, style) {
         bezelImg.filters = [];
         
-        // Create solid color effect by removing all original color information
-        // and replacing with the bezel color
-        const solidColorMatrix = color === '#FFD700' ? 
-            [0, 0, 0, 0, 1.0,     // Red channel -> Gold
-             0, 0, 0, 0, 0.843,   // Green channel -> Gold  
-             0, 0, 0, 0, 0,       // Blue channel -> Gold
-             0, 0, 0, 1, 0] :     // Keep alpha
-            [0, 0, 0, 0, 0.753,   // Red channel -> Silver
-             0, 0, 0, 0, 0.753,   // Green channel -> Silver
-             0, 0, 0, 0, 0.753,   // Blue channel -> Silver
-             0, 0, 0, 1, 0];      // Keep alpha
-             
-        bezelImg.filters.push(new fabric.Image.filters.ColorMatrix({ matrix: solidColorMatrix }));
+        // Get bezel colors
+        const colors = this.getBezelColors(metal, style);
         
-        // Add slight blur for softer bezel edge based on style
-        switch(style) {
-            case 'plain':
-                bezelImg.filters.push(new fabric.Image.filters.Blur({ blur: 0.05 }));
-                break;
-            case 'serrated':
-                bezelImg.filters.push(new fabric.Image.filters.Blur({ blur: 0.1 }));
-                break;
-            case 'scalloped':
-                bezelImg.filters.push(new fabric.Image.filters.Blur({ blur: 0.08 }));
-                break;
-        }
+        // Apply color matrix to make it solid colored
+        const colorMatrix = [
+            0, 0, 0, 0, colors.r/255,  // Red channel
+            0, 0, 0, 0, colors.g/255,  // Green channel  
+            0, 0, 0, 0, colors.b/255,  // Blue channel
+            0, 0, 0, 1, 0              // Keep alpha (transparency)
+        ];
+        
+        bezelImg.filters.push(new fabric.Image.filters.ColorMatrix({ matrix: colorMatrix }));
+        
+        // Add style-specific effects
+        this.addBezelStyleEffect(bezelImg, style);
         
         bezelImg.applyFilters();
+    }
+
+    getBezelColors(metal, style) {
+        const colorMap = {
+            gold: {
+                plain: { r: 255, g: 215, b: 0 },     // Pure gold
+                serrated: { r: 218, g: 165, b: 32 }, // Darker gold
+                scalloped: { r: 255, g: 223, b: 0 }  // Bright gold
+            },
+            silver: {
+                plain: { r: 192, g: 192, b: 192 },   // Silver
+                serrated: { r: 169, g: 169, b: 169 }, // Dark gray
+                scalloped: { r: 211, g: 211, b: 211 } // Light gray
+            }
+        };
+        
+        return colorMap[metal]?.[style] || colorMap[metal]?.plain || { r: 192, g: 192, b: 192 };
+    }
+
+    addBezelStyleEffect(bezelImg, style) {
+        switch(style) {
+            case 'serrated':
+                // Add slight pixelate effect for jagged appearance
+                bezelImg.filters.push(new fabric.Image.filters.Pixelate({ blocksize: 2 }));
+                break;
+            case 'scalloped':
+                // Add slight blur for softer, rounded appearance
+                bezelImg.filters.push(new fabric.Image.filters.Blur({ blur: 0.1 }));
+                break;
+            case 'plain':
+            default:
+                // No additional effects for plain bezel
+                break;
+        }
+    }
+
+    removeExistingBezels(gemstoneId) {
+        const existingBezels = this.canvas.getObjects().filter(obj => 
+            obj.type === 'bezel' && obj.gemstoneId === gemstoneId
+        );
+        
+        existingBezels.forEach(bezel => {
+            this.canvas.remove(bezel);
+        });
+    }
+
+    generateId() {
+        return Math.random().toString(36).substr(2, 9);
     }
 
     addElement(src, name, type, gemstoneType = null) {
